@@ -8,14 +8,14 @@
 
 | 项 | 状态 |
 |---|---|
-| 模块 v0.1.0 构建 | ✅ `app/build.ps1` 全绿，产物 `app/dist/module-v0.1.0.apk`（apksigner verify 通过） |
+| 模块 v0.1.1 构建 | ✅ `app/build.ps1` 全绿，产物 `app/dist/module-v0.1.1.apk`（apksigner verify 通过） |
 | 真机安装 + LSPosed 启用 + 作用域 | ✅ 已装、已启用、作用域 = 闲鱼 + 淘宝 |
-| 闲鱼 7.28.40 逐特性探针 | ✅ `install_summary splash=matched popup=matched widget=matched sdk=matched`（14 条规则 0 失败） |
+| 闲鱼 7.28.40 逐特性探针 | ✅ `install_summary splash=matched popup=matched widget=matched sdk=matched`（17 条规则 0 失败） |
 | 淘宝 10.66.30 逐特性探针 | ✅ `install_summary splash=matched popup=matched widget=matched sdk=matched`（18 条规则 0 失败） |
 | 闸门「真的被调用到」证据 | ✅ 4 条命中行，见下 |
 | 设置页 / 开关链路 | ✅ 见下「开关链路实测」：关掉某个特性后目标进程真的报 `result=off`，复位按钮也验证过 |
 | 自绘 logo | ✅ `assets/logo/logo-1024.png`；**从构建产物解出的 PNG 与源图逐像素相同**（max delta 0） |
-| GitHub 仓库 + Release | ✅ https://github.com/2909272751/taobao-adclean-lsposed |
+| GitHub 仓库 + Release | ✅ https://github.com/2909272751/taobao-adclean-lsposed （v0.1.0 + v0.1.1） |
 | 信息流卡片本体去广告 | ❌ 不可行（两边 base.apk 内都没有渲染期广告判定，已穷举证伪，见 README「已知限制」） |
 | 淘宝闪购频道内广告 | ❌ 不在 base.apk（饿了么 ability IDL 侧） |
 
@@ -96,12 +96,26 @@ sqlite3 .../modules_config.db "select ... from module_configs"
    `tools/recon_bundles.sh` 已备好设备侧枚举脚本；base.apk 内确实没有，必须在
    `/data/data/com.taobao.taobao/files/` 下的动态 dex/jar 里找。
    注意：**不要**用全树遍历兜底（会牺牲流畅度），按 lsposed-module-dev §4.9 的 id 名方案。
-3. **`tb.bbd#w(int, IPopData)`**（首页弹窗最深的单点闸门）尚未反编译，
-   已有调用点证据（`e3b.java:54 this.c.w(...)`）。拿到它可以把 10 条弹窗规则收敛成 1 条。
+3. ~~**`tb.bbd#w(int, IPopData)`**（首页弹窗最深的单点闸门）尚未反编译~~ —— **本条已证伪，作废**。
+   `dex_meta.py --methods-of tb.bbd` 显示 `tb.bbd` 是**滚动容器 interface**（`findItemViewByPosition`
+   / `scrollToPositionWithOffset` / `getVisiblePositionRange`），**没有 `w` 方法**；
+   `tb.e3b` 的字段表显示那个字段的真实类型是 `tb.zbm` 而非 `tb.bbd`。
+   弹窗真正的深层闸门是 `tb.e3b#A(int, IPopData) : boolean`，它已由 `tb_pop_trigger_data` 覆盖，无需再加。
+   **教训**：子代理给出的「某类是某角色」结论必须用 `--methods-of` / `--fields-of` 复核，
+   不要直接写进下一步清单（jadx 的字段类型映射会看花眼）。
 4. **闲鱼开屏的视觉验收**（前置：设备上出现真实开屏广告库存）。当前只有 `blocked` 命中行，没有前后截图。
 5. **把本轮的三个通用坑回灌到 `skeleton/`**（前置：无）——`resolveOne` 基本类型映射、
    AIDL 三源文件、`Config.MODULE` 拼广播组件。这三条对 `weibo-clean-lsposed` /
-   `video-lsposed` / `qq-music-lsposed` 同样成立（它们用的是同一个精简 jar）。
+   `video-lsposed` / `qq-music-lsposed` 同样成立（它们用的是同一个精简 jar）。✅ 已完成（v0.1.1 轮）。
+6. **信息流广告的可行路径只剩一条**：Taobao 的 split APK 已全部盘点（74 个，213MB，
+   在 `/data/data/com.taobao.taobao/files/splitcompat/10.66.30/verified-splits/`），
+   其中 `FlashSalePluginBType.apk` 只是**闪购骑手地图动画**（AMap+Lottie，37KB），
+   不含频道内容；`taobao_android_homepage_remote.apk` / `information_flow_ai.apk` / `tbsearch_remote.apk`
+   里也没有任何广告类型判定。**结论：广告项由服务端 JSON + DX 模板决定，本地无判定点。**
+   若仍要做，唯一安全的位置是「响应 JSON 解析成 section 模型之前」过滤——按 lsposed-module-dev §4.8，
+   过滤点必须早于「按 size 计算布局」；这条需要先定位 infoflow 的响应解析入口（`IContainerDataService`
+   的实现 `DosaContainerDataService` 是候选），**并做好「改错了整栏会消失」的回滚准备**。
+   本轮判断：风险高于收益，不做。
 
 ## 环境备忘
 

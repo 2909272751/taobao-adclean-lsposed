@@ -8,7 +8,7 @@ param([switch]$KeepBuildDirectory)
 # Keep all Chinese text in the skill docs, not in this script.
 $ErrorActionPreference = 'Stop'
 
-$VERSION = '0.1.0'
+$VERSION = '0.1.1'
 
 $app = $PSScriptRoot
 # The toolchain root has a Chinese name. Build it from code points so this script

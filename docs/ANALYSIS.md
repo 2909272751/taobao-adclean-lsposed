@@ -31,6 +31,9 @@
 | `xy_pop_request_and_show` | `PopWindowController#requestAndShowPopWindow(long)` | `(J) → void` | `PopWindowController.java:283-300`；三个触发源 `MainPageJumpWorkflow.java:256/:269`、`PopMainWorkflow.java:81` | 登录成功 / 新人引导 / 主容器 idle 三个触发源的**统一入口** |
 | `xy_pop_handle` | `PopWindowController#doHandleShowPopWindow()` | `() → void`，包级私有 final | `PopWindowController.java:220-235`（`:224` 读 `popWindowConfig.pop`、`:226` 判空、`:230` 才 `showPopWindow`） | 真正决定「弹不弹」的那一步 |
 | `xy_pop_config_request` | `PopWindowRequestController#request(ContextWrapper, boolean, ApiCallBack)` | `(ContextWrapper, Z, ApiCallBack) → void` | `PopWindowRequestController.java:53`；唯一调用者 `PopWindowController` 的 lambda | 弹窗配置的 MTop 拉取点，空实现后**连这次网络请求都省掉** |
+| `xy_activepopup_show` | `com.taobao.idlefish.fun.activepopup.PopupView#show()` | `() → void` | `PopupView.java`（`fun.activepopup` 包共 23 个类，`PopupView` 是该族的视图与展示入口） | 「活动弹窗」是**另一套**框架（Weex/H5 + WindVane JS 桥，与 `PopWindowController` 无交叉）。三个 `show` 重载是它唯一的展示入口 |
+| `xy_activepopup_show_str` | `PopupView#show(String)` | `(String) → void` | 同上 | 同上（按内容 key 展示） |
+| `xy_activepopup_show_rect` | `PopupView#show(Rect, String)` | `(Rect, String) → void` | 同上 | 同上（带锚点区域展示） |
 
 ### 悬浮广告位（feature = widget，1 条）
 
@@ -87,7 +90,7 @@
 
 | hook id | 挂点 | 隐藏的 id 名 | 证据 |
 |---|---|---|---|
-| `widget_ids` | `Activity#onResume` | `bootimage_ad_top_layer`(0x7f0a021e) / `bootimage_ad_pop_skip`(0x7f0a021d) / `bootimage_interact_card_container`(0x7f0a1b17) | `scratch-recon/apktool-res/res/values/public.xml:8630/8629/11995` |
+| `widget_ids` | `Activity#onResume` | `bootimage_ad_top_layer`(0x7f0a021e) / `bootimage_ad_pop_skip`(0x7f0a021d) / `bootimage_interact_card_container`(0x7f0a1b17) / `bootimage_pop_lottie`(0x7f0a0221) | `scratch-recon/apktool-res/res/values/public.xml:8630/8629/11995/8633` |
 
 ### 广告 SDK / 预加载（feature = sdk，2 条）
 
@@ -107,3 +110,5 @@
 | 设置页永远显示「LSPosed 配置服务未连接」 | `libs/service-classes.jar` 是**编译期精简桩**，缺 AIDL 生成的 `IXposedService` / `$Stub` / `IHotReloadCallback` / `IXposedScopeCallback`；运行期 `XposedServiceHelper.onBinderReceived` 抛 `NoClassDefFoundError`，被 `catch(Throwable)` 吞掉只留一行 `E XposedServiceHelper` | 把这三个 AIDL 源文件放进 `app/src/io/github/libxposed/service/`（与 `stub-src` 同属框架级代码） |
 | 设置页收不到任何适配报告，目标进程无任何报错 | 广播收件人写成了 `reportContext.getPackageName()`——在目标进程里那是**目标 App 的包名**，拼出的组件不存在，广播被静默丢弃 | 用 `Config.MODULE` 常量拼 `ComponentName` |
 | 设置页在目标 App 启动前没打开过 → 看不到适配状态 | 模块 App 此时处于 stopped 状态，显式广播唤不起它 | 先打开一次设置页；页面本身也有对应提示文案 |
+| **`tb.bbd` 被当成「首页弹窗展示控制器」，还传下一条 `tb.bbd#w(int, IPopData)` 的「最深单点闸门」** | 用 `dex_meta.py --methods-of tb.bbd` 复核发现：`tb.bbd` 是 **interface**（extends `tb.pad`），方法是 `findItemViewByPosition` / `scrollToPositionWithOffset` / `getVisiblePositionRange` 这类**滚动容器**语义，**根本没有 `w` 方法**；`tb.e3b` 的字段表也显示它的那个字段类型是 `tb.zbm` 而不是 `tb.bbd` | 该条「下一步」作废；弹窗最深的可用闸门就是 `tb.e3b#A(int, IPopData) : boolean`，而它已由 `tb_pop_trigger_data`（`TbPopViewServiceImpl#triggerPopShowByPopData` 恒 false）覆盖，不需要再加 |
+| 想用「服务端开关」一键关广告 | 全 dex 检索 `needAd/disableAd/adSwitch/...`：只有 `adSwitch` 命中字符串表，`--string-refs 'adSwitch'` 显示**没有任何方法加载它**（来自 JS/config，不是 Java 开关） | 没有 Java 侧总开关可用，只能按闸门逐条封 |

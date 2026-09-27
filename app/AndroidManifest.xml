@@ -2,8 +2,8 @@
 <!-- 占位符：io.github.taobaoadclean = 模块包名（如 io.github.xxxclean）；淘系去广告 = 设置页显示名 -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="io.github.taobaoadclean"
-    android:versionCode="1"
-    android:versionName="0.1.0">
+    android:versionCode="2"
+    android:versionName="0.1.1">
     <uses-sdk android:minSdkVersion="26" android:targetSdkVersion="34" />
 
     <application

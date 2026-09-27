@@ -18,7 +18,7 @@
 | 开关 | 对应页面 | 做了什么 |
 |---|---|---|
 | 开屏广告 | 冷启动 / 切回前台 / 路由唤起 | 断掉开屏的**全部入口**与**唯一渲染出口**；连广告请求和启动遮罩一起省掉 |
-| 弹窗广告 | 首页（登录成功 / 新人引导 / 主容器就绪） | 封堵弹窗装配入口、四条触发路径与 PopLayer 服务端准入校验 |
+| 弹窗广告 | 首页（登录成功 / 新人引导 / 主容器就绪） | 封堵弹窗装配入口、四条触发路径、PopLayer 服务端准入校验，以及另一套 Weex「活动弹窗」的三个展示入口 |
 | 悬浮广告与广告球 | 首页与频道页的浮层广告位 | 按**资源 id 名**隐藏（只隐藏确实存在的那几个 id，找不到就不动） |
 | 广告 SDK 初始化与预加载 | 全应用（后台线程） | 关掉第三方开屏 SDK 的初始化与开屏数据预加载，省电省流量 |
 
@@ -29,7 +29,7 @@
 逐特性探针结果（`install_summary`，来自 LSPosed 逐模块日志）：
 
 ```
-闲鱼 7.28.40 (521)  install_summary splash=matched popup=matched widget=matched sdk=matched   (14 条规则，0 失败)
+闲鱼 7.28.40 (521)  install_summary splash=matched popup=matched widget=matched sdk=matched   (17 条规则，0 失败)
 淘宝 10.66.30 (862) install_summary splash=matched popup=matched widget=matched sdk=matched   (18 条规则，0 失败)
 ```
 

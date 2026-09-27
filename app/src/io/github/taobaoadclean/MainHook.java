@@ -223,6 +223,15 @@ public final class MainHook extends XposedModule {
         block(loader, "com.taobao.idlefish.popwindow.PopWindowRequestController", "request",
                 new String[]{"android.content.ContextWrapper", "boolean",
                         "com.taobao.idlefish.protocol.net.ApiCallBack"}, "xy_pop_config_request");
+        // 「活动弹窗」是另一套（Weex/H5 渲染的 fun.activepopup 家族，与上面的 PopWindow 无关），
+        // 展示入口只有 PopupView 的三个 show 重载；空实现即这一族整体不出现。
+        // 证据：scratch-recon/jadx-xy/PopupView.java（show / show(String) / show(Rect, String)）
+        block(loader, "com.taobao.idlefish.fun.activepopup.PopupView", "show",
+                new String[0], "xy_activepopup_show");
+        block(loader, "com.taobao.idlefish.fun.activepopup.PopupView", "show",
+                new String[]{"java.lang.String"}, "xy_activepopup_show_str");
+        block(loader, "com.taobao.idlefish.fun.activepopup.PopupView", "show",
+                new String[]{"android.graphics.Rect", "java.lang.String"}, "xy_activepopup_show_rect");
     }
 
     /**
@@ -234,6 +243,7 @@ public final class MainHook extends XposedModule {
         // 淘宝侧：开屏广告浮层的资源 id（R 已内联，只能从 resources.arsc 取，见 RECON-TAOBAO.md E 节）
         final String[] taobaoNames = {
                 "bootimage_ad_top_layer", "bootimage_ad_pop_skip", "bootimage_interact_card_container",
+                "bootimage_pop_lottie",
         };
         // 闲鱼侧：悬浮广告位与广告球（闲鱼自有资源段，见 RECON-IDLEFISH.md 第 4 节）
         final String[] idlefishNames = {
