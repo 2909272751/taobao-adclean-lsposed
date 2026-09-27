@@ -1,0 +1,23 @@
+# 逆向中间产物：体积大、且是某个 App 某个版本的事实，不进仓库
+reference-apk/
+scratch-recon/
+tools/jadx-*/
+*.apk
+*.idsig
+
+# 本地构建目录
+app/dist/
+app/build/
+
+# 编辑器 / 系统
+.vs/
+.idea/
+*.user
+Thumbs.db
+desktop.ini
+
+# �������в���
+hs_err_pid*.log
+__pycache__/
+*.pyc
+

@@ -1,0 +1,3 @@
+# 作用域：一行一个目标包名（staticScope=true 时这就是固定作用域）
+com.taobao.idlefish
+com.taobao.taobao
