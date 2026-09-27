@@ -48,6 +48,10 @@
 
 设置页（四行「已布防」+ 每行「对应页面」）：`docs/evidence/module-settings.png`。
 
+开关链路也实测过：在设置页把「广告 SDK」关掉 → 强停闲鱼冷启动 →
+`feature=sdk result=off armed=0 failed=0`、`install_summary … sdk=off`；
+点「恢复默认设置」→ 该行配置被清掉 → 冷启动恢复 `sdk=matched`。
+
 ## 未做到 / 已知限制（不粉饰）
 
 1. **信息流卡片本体没有去掉**。闲鱼与淘宝的首页推荐流由服务端下发的 DynamicX 模板渲染

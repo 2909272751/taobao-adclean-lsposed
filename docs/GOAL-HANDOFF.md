@@ -13,7 +13,7 @@
 | 闲鱼 7.28.40 逐特性探针 | ✅ `install_summary splash=matched popup=matched widget=matched sdk=matched`（14 条规则 0 失败） |
 | 淘宝 10.66.30 逐特性探针 | ✅ `install_summary splash=matched popup=matched widget=matched sdk=matched`（18 条规则 0 失败） |
 | 闸门「真的被调用到」证据 | ✅ 4 条命中行，见下 |
-| 设置页 / 开关链路 | ✅ RemotePreferences 已连接、4 个开关可用、适配状态逐项渲染 |
+| 设置页 / 开关链路 | ✅ 见下「开关链路实测」：关掉某个特性后目标进程真的报 `result=off`，复位按钮也验证过 |
 | 自绘 logo | ✅ `assets/logo/logo-1024.png`；**从构建产物解出的 PNG 与源图逐像素相同**（max delta 0） |
 | GitHub 仓库 + Release | ✅ https://github.com/2909272751/taobao-adclean-lsposed |
 | 信息流卡片本体去广告 | ❌ 不可行（两边 base.apk 内都没有渲染期广告判定，已穷举证伪，见 README「已知限制」） |
@@ -47,6 +47,28 @@ adb shell monkey -p <目标包> -c android.intent.category.LAUNCHER 1
 装模块后同一入口冷启动首页正常、该弹窗不再出现（`scratch-recon/ui/tb-after-home.png`）。
 
 设置页：`scratch-recon/ui/module-final.png` —— 四行「已布防」+ 每行「对应页面」。
+
+### 开关链路实测（设置页 → RemotePreferences → 目标进程）
+
+```
+# 在设置页把「广告 SDK」开关拨到关
+sqlite3 .../modules_config.db "select ... from module_configs"
+  -> io.github.taobaoadclean / io.github.taobaoadclean_settings / sdk_enabled = ...00   (Java Boolean false)
+
+# 强停闲鱼并冷启动
+(com.taobao.idlefish) [schema=1] feature=sdk result=off armed=0 failed=0
+(com.taobao.idlefish) [schema=1] install_summary splash=matched popup=matched widget=matched sdk=off
+
+# 点设置页「恢复默认设置（全部开启）」→ module_configs 里该行消失 → 冷启动后
+(com.taobao.idlefish) [schema=1] install_summary splash=matched popup=matched widget=matched sdk=matched
+```
+
+结论：**开关真的能关掉特性，且复位的语义 = 回落到「默认全开」**（`off` 与 `miss` 是两种状态，
+前者是用户关的，后者是没找到锚点，UI 文案已区分）。
+
+> 踩坑记录：`uiautomator dump` 在本模块自己的设置页上也报 `could not get idle state`
+> —— 因为页面里那个 1 秒一次的刷新 Runnable 让消息队列永远不进 idle。
+> 想自动点开关只能靠截图取像素坐标，别指望 uiautomator。
 
 ## 已被证伪的假设（省下一个人重复试验）
 
