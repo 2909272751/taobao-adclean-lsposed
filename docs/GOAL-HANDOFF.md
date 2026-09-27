@@ -4,6 +4,23 @@
 > 静态逆向的细节在 `docs/RECON-IDLEFISH.md` / `docs/RECON-TAOBAO.md`；
 > 每条 hook 的证据在 `docs/ANALYSIS.md`。
 
+## 目标完成状态（逐条对照原始目标）
+
+| 原始诉求 | 状态 | 说明 |
+|---|---|---|
+| 闲鱼去广告 | ✅ 已交付 | 开屏（5 条）+ 悬浮位/广告球（1 条）+ 广告 SDK（5 条）全部布防；`hid id/advert_suspend_img`、`blocked id=xy_splash_load_hot` 实测命中 |
+| 闲鱼广告弹窗 | ✅ 已交付 | 首页弹窗 3 条 + Weex 活动弹窗 3 条 = 6 条 |
+| 淘宝去广告 | ✅ 已交付 | 开屏 5 条 + 悬浮/开屏浮层 id + 预加载 2 条 |
+| 淘宝广告弹窗 | ✅ 已交付 | 首页弹窗引擎 6 条 + PopLayer 服务端准入 4 条 = 10 条；`blocked id=tb_pop_init` / `tb_pop_schedule` 实测命中，首页「4 张消费券…倒计时」弹窗消失（前后截图在 `docs/evidence/`） |
+| 淘宝闪购去广告 | ⚠️ 仅覆盖 Taobao 全局项 | **有据证明闪购频道内容不在可 hook 的客户端代码里**：base.apk 内 `shangou`/`sg` 类命中 0；74 个 split APK 全部盘点后，`FlashSalePluginBType.apk`（37KB）只是闪购骑手地图动画（AMap + Lottie）。频道内容由服务端下发。**能做的客户端拦截已全部做到**（作用于整个淘宝的开屏/弹窗/悬浮项对闪购页同样生效） |
+| 自己画 logo | ✅ | `tools/make_logo.py` 几何绘制；构建产物内 PNG 与源图**逐像素相同**（max delta 0） |
+| 建仓库 + 发 release | ✅ | https://github.com/2909272751/taobao-adclean-lsposed · v0.1.0 + v0.1.1 · 设备上装的包与 release 包 SHA-256 一致 |
+| 用 adb 解锁调试（密码 258025） | ✅ | 全程 adb + root；LSPosed 启用/作用域用 `/data/adb/lspd/config/modules_config.db` + 重启写入 |
+| LSPosed 插件 | ✅ | libxposed API 102，`minApiVersion=101 targetApiVersion=102`，Android 16 实测 |
+
+**唯一未覆盖**：服务端 DynamicX 模板渲染的**信息流广告卡片本体**（闲鱼首页/搜索、淘宝首页/搜索/闪购频道）。
+原因与唯一可行路径见下面「下一步 #6」。
+
 ## 当前状态
 
 | 项 | 状态 |
